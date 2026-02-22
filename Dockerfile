@@ -1,7 +1,7 @@
 # Railway-compatible Dockerfile (no BuildKit cache mounts)
 
 # ── Stage 1: Build ────────────────────────────────────────────
-FROM rust:1.93-slim AS builder
+FROM rust:latest AS builder
 
 WORKDIR /app
 
