@@ -1,7 +1,7 @@
 # Railway-compatible Dockerfile (no BuildKit cache mounts)
 
 # ── Stage 1: Build ────────────────────────────────────────────
-FROM rust:1.83-slim-bookworm AS builder
+FROM rust:1.93-slim AS builder
 
 WORKDIR /app
 
@@ -63,8 +63,8 @@ host = "[::]"
 allow_public_bind = true
 EOF
 
-# ── Stage 2: Production Runtime (same base as builder) ───────
-FROM debian:bookworm-slim AS release
+# ── Stage 2: Production Runtime (trixie for glibc 2.39+) ─────
+FROM debian:trixie-slim AS release
 
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
