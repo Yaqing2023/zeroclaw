@@ -23,7 +23,17 @@ if [ -n "$ZEROCLAW_DISCORD_BOT_TOKEN" ]; then
         DISCORD_INLINE="$DISCORD_INLINE, guild_id = \"$ZEROCLAW_DISCORD_GUILD_ID\""
     fi
     
-    DISCORD_INLINE="$DISCORD_INLINE, allowed_users = [], listen_to_bots = false, mention_only = false }"
+    # Parse allowed_users - default to ["*"] (allow all) if not set
+    if [ -n "$ZEROCLAW_DISCORD_ALLOWED_USERS" ]; then
+        # Convert comma-separated list to TOML array
+        USERS_ARRAY=$(echo "$ZEROCLAW_DISCORD_ALLOWED_USERS" | sed 's/,/", "/g' | sed 's/^/["/' | sed 's/$/"]/')
+        DISCORD_INLINE="$DISCORD_INLINE, allowed_users = $USERS_ARRAY"
+    else
+        # Default: allow all users
+        DISCORD_INLINE="$DISCORD_INLINE, allowed_users = [\"*\"]"
+    fi
+    
+    DISCORD_INLINE="$DISCORD_INLINE, listen_to_bots = false, mention_only = false }"
 fi
 
 # Create config with optional Discord inline
