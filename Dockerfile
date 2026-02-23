@@ -75,8 +75,8 @@ ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
 ENV ZEROCLAW_CONFIG_DIR=/zeroclaw-data/.zeroclaw
 ENV HOME=/zeroclaw-data
 ENV ZEROCLAW_GATEWAY_PORT=42617
-ENV ZEROCLAW_REQUIRE_PAIRING=false
 ENV ZEROCLAW_MODEL=claude-sonnet-4-5-20250929
+# ZEROCLAW_PAIRED_TOKENS is set by MoltsPay during provisioning
 
 WORKDIR /zeroclaw-data
 USER 65534:65534

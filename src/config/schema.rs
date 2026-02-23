@@ -4154,6 +4154,18 @@ impl Config {
             self.gateway.require_pairing = val != "0" && !val.eq_ignore_ascii_case("false");
         }
 
+        // Pre-paired tokens: ZEROCLAW_PAIRED_TOKENS (comma-separated list of bearer tokens)
+        if let Ok(val) = std::env::var("ZEROCLAW_PAIRED_TOKENS") {
+            let tokens: Vec<String> = val
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            if !tokens.is_empty() {
+                self.gateway.paired_tokens = tokens;
+            }
+        }
+
         // Temperature: ZEROCLAW_TEMPERATURE
         if let Ok(temp_str) = std::env::var("ZEROCLAW_TEMPERATURE") {
             if let Ok(temp) = temp_str.parse::<f64>() {
