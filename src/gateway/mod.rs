@@ -43,8 +43,16 @@ use uuid::Uuid;
 
 /// Maximum request body size (64KB) — prevents memory exhaustion
 pub const MAX_BODY_SIZE: usize = 65_536;
-/// Request timeout (30s) — prevents slow-loris attacks
-pub const REQUEST_TIMEOUT_SECS: u64 = 30;
+/// Default request timeout (30s) — can be overridden via ZEROCLAW_REQUEST_TIMEOUT_SECS
+pub const REQUEST_TIMEOUT_SECS_DEFAULT: u64 = 30;
+
+/// Get request timeout from env var or default
+fn get_request_timeout_secs() -> u64 {
+    std::env::var("ZEROCLAW_REQUEST_TIMEOUT_SECS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(REQUEST_TIMEOUT_SECS_DEFAULT)
+}
 /// Sliding window used by gateway rate limiting.
 pub const RATE_LIMIT_WINDOW_SECS: u64 = 60;
 /// Fallback max distinct client keys tracked in gateway rate limiter.
@@ -666,7 +674,7 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         .layer(RequestBodyLimitLayer::new(MAX_BODY_SIZE))
         .layer(TimeoutLayer::with_status_code(
             StatusCode::REQUEST_TIMEOUT,
-            Duration::from_secs(REQUEST_TIMEOUT_SECS),
+            Duration::from_secs(get_request_timeout_secs()),
         ))
         // ── SPA fallback: non-API GET requests serve index.html ──
         .fallback(get(static_files::handle_spa_fallback));
@@ -1422,8 +1430,8 @@ mod tests {
     }
 
     #[test]
-    fn security_timeout_is_30_seconds() {
-        assert_eq!(REQUEST_TIMEOUT_SECS, 30);
+    fn security_timeout_default_is_30_seconds() {
+        assert_eq!(REQUEST_TIMEOUT_SECS_DEFAULT, 30);
     }
 
     #[test]
