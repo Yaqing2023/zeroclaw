@@ -45,22 +45,8 @@ RUN mkdir -p web/dist && \
 RUN cargo build --release --locked && \
     cp target/release/zeroclaw /app/zeroclaw && \
     strip /app/zeroclaw
-# Prepare runtime directory
+# Prepare runtime directory (config.toml created by entrypoint)
 RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
-    printf '%s\n' \
-      'workspace_dir = "/zeroclaw-data/workspace"' \
-      'config_path = "/zeroclaw-data/.zeroclaw/config.toml"' \
-      'api_key = ""' \
-      'default_provider = "anthropic"' \
-      'default_model = "claude-sonnet-4-5-20250929"' \
-      'default_temperature = 0.7' \
-      '' \
-      '[gateway]' \
-      'port = 42617' \
-      'host = "[::]"' \
-      'allow_public_bind = true' \
-      'require_pairing = false' \
-      > /zeroclaw-data/.zeroclaw/config.toml && \
     chown -R 65534:65534 /zeroclaw-data
 
 # ── Stage 2: Production Runtime (trixie for glibc 2.39+) ─────
@@ -71,8 +57,7 @@ RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/
 COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
 COPY --from=builder /zeroclaw-data /zeroclaw-data
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
-    chown 65534:65534 /zeroclaw-data/.zeroclaw/config.toml
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
 ENV ZEROCLAW_CONFIG_DIR=/zeroclaw-data/.zeroclaw
