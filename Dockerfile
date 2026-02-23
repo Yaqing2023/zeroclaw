@@ -77,4 +77,4 @@ WORKDIR /zeroclaw-data
 USER 65534:65534
 EXPOSE 8080
 ENTRYPOINT ["docker-entrypoint.sh", "zeroclaw"]
-CMD ["gateway"]
+CMD ["daemon"]
