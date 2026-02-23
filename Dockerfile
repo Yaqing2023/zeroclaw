@@ -73,6 +73,7 @@ COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
 COPY --from=builder /zeroclaw-data /zeroclaw-data
 
 ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
+ENV ZEROCLAW_CONFIG_DIR=/zeroclaw-data/.zeroclaw
 ENV HOME=/zeroclaw-data
 ENV ZEROCLAW_GATEWAY_PORT=42617
 
