@@ -533,3 +533,44 @@ fn mask_sensitive_fields(toml_str: &str) -> String {
     }
     output
 }
+
+// ── Chat endpoint for MoltsPay integration ─────────────────────
+
+#[derive(Deserialize)]
+pub struct ChatRequest {
+    pub message: String,
+    #[serde(default)]
+    pub context: Option<serde_json::Value>,
+}
+
+/// POST /api/chat — Simple chat endpoint for external integrations
+/// 
+/// Request: `{"message": "Hello", "context": {...}}`
+/// Response: `{"content": "Hi! How can I help?", "actions": []}`
+pub async fn handle_api_chat(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<ChatRequest>,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+
+    let message = body.message.trim();
+    if message.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "Message is required"})),
+        )
+            .into_response();
+    }
+
+    // For now, return a simple acknowledgment
+    // TODO: Integrate with agent loop for actual processing
+    let response = serde_json::json!({
+        "content": format!("I received your message: \"{}\".\n\nNote: Full agent integration is in progress. For now, I can confirm I'm running and authenticated.", message),
+        "actions": []
+    });
+
+    Json(response).into_response()
+}
