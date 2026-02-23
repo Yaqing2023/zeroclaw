@@ -4149,6 +4149,11 @@ impl Config {
             self.gateway.allow_public_bind = val == "1" || val.eq_ignore_ascii_case("true");
         }
 
+        // Require pairing: ZEROCLAW_REQUIRE_PAIRING (default true, set to "false" or "0" to disable)
+        if let Ok(val) = std::env::var("ZEROCLAW_REQUIRE_PAIRING") {
+            self.gateway.require_pairing = val != "0" && !val.eq_ignore_ascii_case("false");
+        }
+
         // Temperature: ZEROCLAW_TEMPERATURE
         if let Ok(temp_str) = std::env::var("ZEROCLAW_TEMPERATURE") {
             if let Ok(temp) = temp_str.parse::<f64>() {

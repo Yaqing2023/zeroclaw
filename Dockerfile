@@ -75,6 +75,7 @@ ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
 ENV ZEROCLAW_CONFIG_DIR=/zeroclaw-data/.zeroclaw
 ENV HOME=/zeroclaw-data
 ENV ZEROCLAW_GATEWAY_PORT=42617
+ENV ZEROCLAW_REQUIRE_PAIRING=false
 
 WORKDIR /zeroclaw-data
 USER 65534:65534
