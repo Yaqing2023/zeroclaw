@@ -61,6 +61,7 @@ default_temperature = 0.7
 port = 42617
 host = "[::]"
 allow_public_bind = true
+require_pairing = false
 EOF
 
 # ── Stage 2: Production Runtime (trixie for glibc 2.39+) ─────
