@@ -70,6 +70,9 @@ RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/
 
 COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
 COPY --from=builder /zeroclaw-data /zeroclaw-data
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh && \
+    chown 65534:65534 /zeroclaw-data/.zeroclaw/config.toml
 
 ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
 ENV ZEROCLAW_CONFIG_DIR=/zeroclaw-data/.zeroclaw
@@ -77,9 +80,14 @@ ENV HOME=/zeroclaw-data
 ENV ZEROCLAW_GATEWAY_PORT=42617
 ENV ZEROCLAW_MODEL=claude-sonnet-4-5-20250929
 # ZEROCLAW_PAIRED_TOKENS is set by MoltsPay during provisioning
+# Discord config via env vars:
+#   ZEROCLAW_DISCORD_BOT_TOKEN - Discord bot token
+#   ZEROCLAW_DISCORD_GUILD_ID - Optional guild/server ID
+#   ZEROCLAW_DISCORD_ALLOWED_USERS - Comma-separated user IDs (empty = open)
+#   ZEROCLAW_DISCORD_MENTION_ONLY - true/false (default: false)
 
 WORKDIR /zeroclaw-data
 USER 65534:65534
 EXPOSE 42617
-ENTRYPOINT ["zeroclaw"]
+ENTRYPOINT ["docker-entrypoint.sh", "zeroclaw"]
 CMD ["gateway"]
