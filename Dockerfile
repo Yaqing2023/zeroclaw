@@ -54,7 +54,7 @@ workspace_dir = "/zeroclaw-data/workspace"
 config_path = "/zeroclaw-data/.zeroclaw/config.toml"
 api_key = ""
 default_provider = "anthropic"
-default_model = "claude-sonnet-4-20250514"
+default_model = "claude-sonnet-4-5-20250929"
 default_temperature = 0.7
 
 [gateway]
