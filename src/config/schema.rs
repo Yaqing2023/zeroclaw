@@ -249,6 +249,10 @@ fn default_max_tool_iterations() -> usize {
     10
 }
 
+fn default_discord_allowed_users() -> Vec<String> {
+    vec!["*".to_string()]
+}
+
 // ── Hardware Config (wizard-driven) ─────────────────────────────
 
 /// Hardware transport mode.
@@ -2646,8 +2650,8 @@ pub struct DiscordConfig {
     pub bot_token: String,
     /// Optional guild (server) ID to restrict the bot to a single guild.
     pub guild_id: Option<String>,
-    /// Allowed Discord user IDs. Empty = deny all.
-    #[serde(default)]
+    /// Allowed Discord user IDs. Empty = deny all, ["*"] = allow all.
+    #[serde(default = "default_discord_allowed_users")]
     pub allowed_users: Vec<String>,
     /// When true, process messages from other bots (not just humans).
     /// The bot still ignores its own messages to prevent feedback loops.
