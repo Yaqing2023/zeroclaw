@@ -52,6 +52,7 @@ RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
 # ── Stage 2: Production Runtime (trixie for glibc 2.39+) ─────
 FROM debian:trixie-slim AS release
 
+# Cache bust: 2026-02-23-v2
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
@@ -62,7 +63,7 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
 ENV ZEROCLAW_CONFIG_DIR=/zeroclaw-data/.zeroclaw
 ENV HOME=/zeroclaw-data
-ENV ZEROCLAW_GATEWAY_PORT=42617
+ENV ZEROCLAW_GATEWAY_PORT=8080
 ENV ZEROCLAW_MODEL=claude-sonnet-4-5-20250929
 # ZEROCLAW_PAIRED_TOKENS is set by MoltsPay during provisioning
 # Discord config via env vars:
@@ -73,6 +74,6 @@ ENV ZEROCLAW_MODEL=claude-sonnet-4-5-20250929
 
 WORKDIR /zeroclaw-data
 USER 65534:65534
-EXPOSE 42617
+EXPOSE 8080
 ENTRYPOINT ["docker-entrypoint.sh", "zeroclaw"]
 CMD ["gateway"]

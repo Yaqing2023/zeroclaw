@@ -1,9 +1,21 @@
 #!/bin/sh
-# ZeroClaw Docker entrypoint - creates config from env vars
+# ZeroClaw Docker entrypoint v2 - creates config from env vars
+# Version 2: Completely regenerates config each time
 
-CONFIG_FILE="${ZEROCLAW_CONFIG_DIR:-/zeroclaw-data/.zeroclaw}/config.toml"
+CONFIG_DIR="${ZEROCLAW_CONFIG_DIR:-/zeroclaw-data/.zeroclaw}"
+CONFIG_FILE="${CONFIG_DIR}/config.toml"
 
-echo "[entrypoint] Generating config.toml..."
+echo "[entrypoint v2] Starting..."
+echo "[entrypoint v2] CONFIG_DIR=$CONFIG_DIR"
+echo "[entrypoint v2] CONFIG_FILE=$CONFIG_FILE"
+
+# Ensure directory exists
+mkdir -p "$CONFIG_DIR"
+
+# Remove any existing config to start fresh
+rm -f "$CONFIG_FILE" 2>/dev/null || true
+
+echo "[entrypoint v2] Generating fresh config.toml..."
 
 # Create base config
 cat > "$CONFIG_FILE" << 'BASECONFIG'
@@ -27,7 +39,7 @@ BASECONFIG
 
 # Add Discord config if env vars are set
 if [ -n "$ZEROCLAW_DISCORD_BOT_TOKEN" ]; then
-    echo "[entrypoint] Adding Discord config..."
+    echo "[entrypoint v2] Adding Discord config..."
     cat >> "$CONFIG_FILE" << EOF
 
 [channels_config.discord]
@@ -49,9 +61,11 @@ EOF
     echo "mention_only = ${ZEROCLAW_DISCORD_MENTION_ONLY:-false}" >> "$CONFIG_FILE"
 fi
 
-echo "[entrypoint] Config generated:"
+echo "[entrypoint v2] Config generated successfully:"
+echo "----------------------------------------"
 cat "$CONFIG_FILE"
-echo "[entrypoint] Starting ZeroClaw..."
+echo "----------------------------------------"
+echo "[entrypoint v2] Starting ZeroClaw..."
 
 # Execute the main command
 exec "$@"
