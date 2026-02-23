@@ -45,24 +45,23 @@ RUN mkdir -p web/dist && \
 RUN cargo build --release --locked && \
     cp target/release/zeroclaw /app/zeroclaw && \
     strip /app/zeroclaw
-
 # Prepare runtime directory
 RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
-    cat > /zeroclaw-data/.zeroclaw/config.toml <<EOF && \
+    printf '%s\n' \
+      'workspace_dir = "/zeroclaw-data/workspace"' \
+      'config_path = "/zeroclaw-data/.zeroclaw/config.toml"' \
+      'api_key = ""' \
+      'default_provider = "anthropic"' \
+      'default_model = "claude-sonnet-4-5-20250929"' \
+      'default_temperature = 0.7' \
+      '' \
+      '[gateway]' \
+      'port = 42617' \
+      'host = "[::]"' \
+      'allow_public_bind = true' \
+      'require_pairing = false' \
+      > /zeroclaw-data/.zeroclaw/config.toml && \
     chown -R 65534:65534 /zeroclaw-data
-workspace_dir = "/zeroclaw-data/workspace"
-config_path = "/zeroclaw-data/.zeroclaw/config.toml"
-api_key = ""
-default_provider = "anthropic"
-default_model = "claude-sonnet-4-5-20250929"
-default_temperature = 0.7
-
-[gateway]
-port = 42617
-host = "[::]"
-allow_public_bind = true
-require_pairing = false
-EOF
 
 # ── Stage 2: Production Runtime (trixie for glibc 2.39+) ─────
 FROM debian:trixie-slim AS release
