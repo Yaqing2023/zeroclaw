@@ -50,38 +50,37 @@ Response includes:
 
 ## Step 2: Check Spending Limits
 
-Before buying, check if purchase is allowed:
+MoltsPay SDK has built-in spending limits. Check before buying:
 
 ```bash
-# Check if purchase is allowed (validates spending limit + balance)
-curl -s -X POST "https://moltspay.com/api/internal/purchase/check" \
-  -H "Authorization: Bearer $AGENT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"amount": 5.00}' | jq .
+npx moltspay status
 ```
 
-Response:
-```json
-{
-  "allowed": true,
-  "reason": null,
-  "spending": {
-    "spent_today": 3.00,
-    "daily_limit": 10.00,
-    "remaining_today": 7.00
-  },
-  "wallet": {
-    "address": "0x...",
-    "balance_usdc": 42.50
-  }
-}
+Output:
+```
+📊 MoltsPay Status
+
+   Wallet: 0x...
+   Chain: base
+   Balance: 42.50 USDC
+
+   Limits:
+     Max per tx: $10
+     Max per day: $100
+     Spent today: $3.00
 ```
 
-**If `allowed: false`, STOP and tell user the `reason`.**
+**STOP if:**
+- Service price > "Max per tx"
+- Service price > (daily limit - spent today)
+- Service price > Balance
 
-Example error responses:
-- "Daily limit exceeded. Spent: $8.00, Limit: $10, Requested: $5"
-- "Insufficient balance. Balance: $2.50, Requested: $5"
+Tell user why you can't proceed.
+
+**To change limits:**
+```bash
+npx moltspay config --max-per-tx 20 --max-per-day 200
+```
 
 ## Step 3: Buy with MoltsPay
 
