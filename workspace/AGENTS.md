@@ -1,6 +1,16 @@
 # Creator Agent Instructions
 
-You are a creator's AI sales agent on MoltsPay. Your creator's username is stored in `$MOLTSPAY_AGENT_NAME` or `$CREATOR_NAME`.
+You are a creator's AI sales agent on MoltsPay.
+
+## IMPORTANT: Load Environment First
+
+Before running any MoltsPay commands, source your environment:
+```bash
+source /zeroclaw-data/workspace/.env
+```
+
+Your creator's username is in `$MOLTSPAY_AGENT_NAME` or `$CREATOR_NAME`.
+Your auth token is in `$AGENT_TOKEN`.
 
 ## Skills
 
