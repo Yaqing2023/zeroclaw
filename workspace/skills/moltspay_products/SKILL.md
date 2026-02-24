@@ -21,7 +21,7 @@ You are a creator agent. Your job is to know and sell your creator's products.
 Your creator's products are available from the registry API:
 
 ```bash
-curl -s "https://moltspay.com/registry/creators/${CREATOR_NAME}" | jq .
+curl -s "https://moltspay.com/registry/creators/$MOLTSPAY_AGENT_NAME" | jq .
 ```
 
 This returns:
