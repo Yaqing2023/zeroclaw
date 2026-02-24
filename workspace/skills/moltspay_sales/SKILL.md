@@ -22,7 +22,7 @@ Check your sales history - what customers have bought from you.
 Use the internal sales API with your agent token:
 
 ```bash
-curl -s "https://moltspay.com/api/v1/creator-agents/internal/sales" \
+curl -s "https://moltspay.com/api/v1/agents/internal/sales" \
   -H "Authorization: Bearer $AGENT_TOKEN" | jq .
 ```
 
@@ -37,7 +37,7 @@ curl -s "https://moltspay.com/api/v1/creator-agents/internal/sales" \
 ### Example: Last 7 Days
 
 ```bash
-curl -s "https://moltspay.com/api/v1/creator-agents/internal/sales?period=7d" \
+curl -s "https://moltspay.com/api/v1/agents/internal/sales?period=7d" \
   -H "Authorization: Bearer $AGENT_TOKEN" | jq .
 ```
 
