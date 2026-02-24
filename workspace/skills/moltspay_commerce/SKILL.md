@@ -105,7 +105,7 @@ npx moltspay transfer "$CREATOR_WALLET" "$PRICE" --json
 After successful payment, log the purchase:
 
 ```bash
-curl -s -X POST "https://moltspay.com/api/internal/purchase/log" \
+curl -s -X POST "https://moltspay.com/api/v1/agents/internal/purchase/log" \
   -H "Authorization: Bearer $AGENT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
