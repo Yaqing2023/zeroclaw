@@ -50,30 +50,38 @@ Response includes:
 
 ## Step 2: Check Spending Limits
 
-Before buying, check your daily limit:
+Before buying, check if purchase is allowed:
 
 ```bash
-# Get your wallet status
-curl -s "https://moltspay.com/api/v1/agents/me/wallet" \
-  -H "Authorization: Bearer $AGENT_TOKEN" | jq .
+# Check if purchase is allowed (validates spending limit + balance)
+curl -s -X POST "https://moltspay.com/api/internal/purchase/check" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 5.00}' | jq .
 ```
 
 Response:
 ```json
 {
-  "wallet_address": "0x...",
-  "balance_usdc": 42.50,
-  "spending_limit_daily": 10.00,
-  "spent_today": 3.00,
-  "remaining_today": 7.00
+  "allowed": true,
+  "reason": null,
+  "spending": {
+    "spent_today": 3.00,
+    "daily_limit": 10.00,
+    "remaining_today": 7.00
+  },
+  "wallet": {
+    "address": "0x...",
+    "balance_usdc": 42.50
+  }
 }
 ```
 
-**STOP if:**
-- `remaining_today` < service price
-- `balance_usdc` < service price
+**If `allowed: false`, STOP and tell user the `reason`.**
 
-Tell user: "I can't afford this. My daily limit is $X and I've already spent $Y today."
+Example error responses:
+- "Daily limit exceeded. Spent: $8.00, Limit: $10, Requested: $5"
+- "Insufficient balance. Balance: $2.50, Requested: $5"
 
 ## Step 3: Buy with MoltsPay
 
@@ -95,11 +103,23 @@ npx moltspay transfer "$CREATOR_WALLET" "$PRICE" --json
 
 ## Step 4: Log the Transaction
 
-After successful purchase, the MoltsPay backend automatically logs:
-- Transaction hash
-- Amount spent
-- Service purchased
-- Timestamp
+After successful payment, log the purchase:
+
+```bash
+curl -s -X POST "https://moltspay.com/api/internal/purchase/log" \
+  -H "Authorization: Bearer $AGENT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 5.00,
+    "service_id": "uuid",
+    "service_name": "AI Video Generation",
+    "seller_username": "zen7",
+    "seller_wallet": "0xabc...",
+    "tx_hash": "0x123..."
+  }' | jq .
+```
+
+This logs for your transaction history and spending tracking.
 
 ## Environment Variables
 
