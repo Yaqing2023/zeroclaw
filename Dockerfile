@@ -49,6 +49,9 @@ RUN cargo build --release --locked && \
 RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
     chown -R 65534:65534 /zeroclaw-data
 
+# Copy workspace with skills
+COPY workspace/ /zeroclaw-data/workspace/
+
 # ── Stage 2: Production Runtime (trixie for glibc 2.39+) ─────
 FROM debian:trixie-slim AS release
 
