@@ -1,11 +1,37 @@
 #!/bin/sh
-# ZeroClaw Docker entrypoint v3 - uses inline table format for discord
-# Version 3: Uses inline format to avoid duplicate key issues
+# ZeroClaw Docker entrypoint v4 - with MoltsPay wallet initialization
+# Version 4: Adds moltspay wallet setup for agent-to-agent payments
 
 CONFIG_DIR="${ZEROCLAW_CONFIG_DIR:-/zeroclaw-data/.zeroclaw}"
 CONFIG_FILE="${CONFIG_DIR}/config.toml"
+MOLTSPAY_DIR="$HOME/.moltspay"
 
-echo "[entrypoint v3] Starting..."
+echo "[entrypoint v4] Starting..."
+
+# ── Initialize MoltsPay wallet if not exists ──────────────────
+if [ ! -f "$MOLTSPAY_DIR/wallet.json" ]; then
+    echo "[entrypoint v4] Initializing MoltsPay wallet..."
+    mkdir -p "$MOLTSPAY_DIR"
+    
+    # Initialize wallet (non-interactive, Base chain)
+    npx moltspay init --chain base --yes 2>/dev/null || {
+        echo "[entrypoint v4] Warning: moltspay init failed, will retry later"
+    }
+    
+    # Report wallet address to MoltsPay backend if configured
+    if [ -f "$MOLTSPAY_DIR/wallet.json" ] && [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
+        WALLET_ADDRESS=$(cat "$MOLTSPAY_DIR/wallet.json" | jq -r '.address')
+        echo "[entrypoint v4] Reporting wallet address: $WALLET_ADDRESS"
+        curl -s -X POST "$MOLTSPAY_API_URL/api/internal/agents/wallet" \
+            -H "Authorization: Bearer $AGENT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"address\": \"$WALLET_ADDRESS\"}" || {
+            echo "[entrypoint v4] Warning: Failed to report wallet address"
+        }
+    fi
+else
+    echo "[entrypoint v4] MoltsPay wallet already exists"
+fi
 
 # Ensure directory exists and remove any existing config
 mkdir -p "$CONFIG_DIR"

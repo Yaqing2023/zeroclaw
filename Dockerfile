@@ -52,9 +52,21 @@ RUN mkdir -p /zeroclaw-data/.zeroclaw /zeroclaw-data/workspace && \
 # ── Stage 2: Production Runtime (trixie for glibc 2.39+) ─────
 FROM debian:trixie-slim AS release
 
-# Cache bust: 2026-02-23-v4-daemon-mode
-ARG CACHEBUST=2
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+# Cache bust: 2026-02-24-v5-moltspay
+ARG CACHEBUST=3
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 22 LTS for moltspay
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install moltspay globally
+RUN npm install -g moltspay@latest
 
 COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
 COPY --from=builder /zeroclaw-data /zeroclaw-data
