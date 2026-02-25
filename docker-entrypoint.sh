@@ -56,7 +56,7 @@ if [ ! -f "$MOLTSPAY_DIR/wallet.json" ]; then
         WALLET_ADDRESS=$(cat "$MOLTSPAY_DIR/wallet.json" | jq -r '.address' 2>/dev/null) || true
         if [ -n "$WALLET_ADDRESS" ] && [ "$WALLET_ADDRESS" != "null" ]; then
             echo "[entrypoint v10] Reporting wallet address: $WALLET_ADDRESS"
-            curl -s -X POST "$MOLTSPAY_API_URL/api/internal/agents/wallet" \
+            curl -s -X POST "$MOLTSPAY_API_URL/api/v1/agents/internal/wallet" \
                 -H "Authorization: Bearer $AGENT_TOKEN" \
                 -H "Content-Type: application/json" \
                 -d "{\"address\": \"$WALLET_ADDRESS\"}" || {
@@ -71,7 +71,7 @@ fi
 # ── Fetch and apply spending limit from backend ──────────────────
 if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
     echo "[entrypoint v10] Fetching spending config from backend..."
-    CONFIG_RESPONSE=$(curl -s "$MOLTSPAY_API_URL/api/internal/agents/config" \
+    CONFIG_RESPONSE=$(curl -s "$MOLTSPAY_API_URL/api/v1/agents/internal/config" \
         -H "Authorization: Bearer $AGENT_TOKEN" 2>/dev/null) || true
     
     if [ -n "$CONFIG_RESPONSE" ]; then
