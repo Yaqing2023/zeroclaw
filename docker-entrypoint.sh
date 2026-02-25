@@ -47,6 +47,23 @@ else
     echo "[entrypoint v6] MoltsPay wallet already exists"
 fi
 
+# ── Fetch and apply spending limit from backend ──────────────────
+if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
+    echo "[entrypoint v6] Fetching spending config from backend..."
+    CONFIG_RESPONSE=$(curl -s "$MOLTSPAY_API_URL/api/internal/agents/config" \
+        -H "Authorization: Bearer $AGENT_TOKEN" 2>/dev/null)
+    
+    if [ -n "$CONFIG_RESPONSE" ]; then
+        SPENDING_LIMIT=$(echo "$CONFIG_RESPONSE" | jq -r '.spending_limit_daily // empty')
+        if [ -n "$SPENDING_LIMIT" ] && [ "$SPENDING_LIMIT" != "null" ]; then
+            echo "[entrypoint v6] Applying spending limit: \$$SPENDING_LIMIT/day"
+            npx moltspay config --max-per-day "$SPENDING_LIMIT" 2>&1 || {
+                echo "[entrypoint v6] Warning: Failed to apply spending limit"
+            }
+        fi
+    fi
+fi
+
 # Ensure directory exists and remove any existing config
 mkdir -p "$CONFIG_DIR"
 rm -f "$CONFIG_FILE" 2>/dev/null || true
