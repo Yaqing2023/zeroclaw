@@ -55,8 +55,8 @@ COPY workspace/ /zeroclaw-data/workspace/
 # ── Stage 2: Production Runtime (trixie for glibc 2.39+) ─────
 FROM debian:trixie-slim AS release
 
-# Cache bust: 2026-02-25-v6-moltspay-fix
-ARG CACHEBUST=4
+# Cache bust: 2026-02-25-v7-moltspay-perm-fix
+ARG CACHEBUST=7
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
