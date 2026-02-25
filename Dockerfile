@@ -56,7 +56,7 @@ COPY workspace/ /zeroclaw-data/workspace/
 FROM debian:trixie-slim AS release
 
 # Cache bust - this ARG must be used to invalidate cache
-ARG CACHEBUST=10
+ARG CACHEBUST=11
 RUN echo "Cache bust: $CACHEBUST" && apt-get update && apt-get install -y \
     ca-certificates \
     curl \
