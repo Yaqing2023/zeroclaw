@@ -56,11 +56,12 @@ COPY workspace/ /zeroclaw-data/workspace/
 FROM debian:trixie-slim AS release
 
 # Cache bust - this ARG must be used to invalidate cache
-ARG CACHEBUST=9
+ARG CACHEBUST=10
 RUN echo "Cache bust: $CACHEBUST" && apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     jq \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 22 LTS for moltspay
@@ -93,7 +94,8 @@ ENV ZEROCLAW_MODEL=claude-sonnet-4-5-20250929
 #   ZEROCLAW_DISCORD_MENTION_ONLY - true/false (default: false)
 
 WORKDIR /zeroclaw-data
-USER 65534:65534
+# Note: No USER directive - entrypoint starts as root, fixes volume permissions,
+# then drops to 65534:65534 via gosu for security
 EXPOSE 8080
 ENTRYPOINT ["docker-entrypoint.sh", "zeroclaw"]
 CMD ["daemon"]
