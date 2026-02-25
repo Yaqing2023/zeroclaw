@@ -8,9 +8,9 @@
     "numReplicas": 1,
     "sleepApplication": true,
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 3
-    "resources": {                                                                                           
-      "memory": "512Mi"
+    "restartPolicyMaxRetries": 3,
+    "resources": {
+      "memory": "512Mi",
       "cpu": "1"
     }
   }
