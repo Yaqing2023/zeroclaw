@@ -55,8 +55,8 @@ COPY workspace/ /zeroclaw-data/workspace/
 # ── Stage 2: Production Runtime (trixie for glibc 2.39+) ─────
 FROM debian:trixie-slim AS release
 
-# Cache bust: 2026-02-24-v5-moltspay
-ARG CACHEBUST=3
+# Cache bust: 2026-02-25-v6-moltspay-fix
+ARG CACHEBUST=4
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
@@ -75,6 +75,10 @@ COPY --from=builder /app/zeroclaw /usr/local/bin/zeroclaw
 COPY --from=builder /zeroclaw-data /zeroclaw-data
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Fix permissions: COPY doesn't preserve ownership, create .moltspay dir
+RUN mkdir -p /zeroclaw-data/.moltspay && \
+    chown -R 65534:65534 /zeroclaw-data
 
 ENV ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace
 ENV ZEROCLAW_CONFIG_DIR=/zeroclaw-data/.zeroclaw
