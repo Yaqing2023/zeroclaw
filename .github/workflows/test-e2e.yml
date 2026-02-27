@@ -1,8 +1,7 @@
 name: Test E2E
 
+# Disabled - only run manually when needed
 on:
-    push:
-        branches: [dev, main]
     workflow_dispatch:
 
 concurrency:
