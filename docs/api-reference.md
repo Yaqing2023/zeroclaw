@@ -97,21 +97,37 @@ Simple chat endpoint. **Does not execute tools** — designed for backward compa
 
 ### GET /ws/chat
 
-WebSocket endpoint for full agent chat **with tool execution**.
+WebSocket endpoint for agent chat.
 
 **Connection:**
 ```
 ws://localhost:3000/ws/chat?token=<bearer_token>
 ```
 
+**Current Status:** ⚠️ Simple chat only (no tool execution)
+
 **Protocol:**
 ```
 Client → Server: {"type":"message","content":"Hello"}
-Server → Client: {"type":"chunk","content":"Hi! "}
-Server → Client: {"type":"tool_call","name":"shell","args":{...}}
-Server → Client: {"type":"tool_result","name":"shell","output":"..."}
 Server → Client: {"type":"done","full_response":"..."}
+Server → Client: {"type":"error","message":"..."}
 ```
+
+**Planned Enhancement:** Full agent loop with tool execution
+
+```
+Client → Server: {"type":"message","content":"Hello"}
+Client → Server: {"type":"cancel"}  // Cancel current task
+
+Server → Client: {"type":"thinking","content":"..."}
+Server → Client: {"type":"tool_call","id":"1","name":"shell","args":{...}}
+Server → Client: {"type":"tool_result","id":"1","output":"...","success":true}
+Server → Client: {"type":"chunk","content":"..."}  // Streaming text
+Server → Client: {"type":"done","full_response":"..."}
+Server → Client: {"type":"error","message":"..."}
+```
+
+See: [MoltsPay WebSocket Integration Design](https://github.com/user/moltspay-creators/docs/ZEROCLAW_WEBSOCKET_INTEGRATION.md)
 
 ---
 
