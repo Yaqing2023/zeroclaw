@@ -159,6 +159,8 @@ if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
     if [ -n "$SKILLS_RESPONSE" ]; then
         # Parse skills array and install each one
         SKILL_COUNT=$(echo "$SKILLS_RESPONSE" | jq -r '.skills | length' 2>/dev/null) || true
+        echo "[entrypoint v10] DEBUG: SKILL_COUNT='$SKILL_COUNT'"
+        echo "SKILL_COUNT='$SKILL_COUNT'" >> "$DEBUG_LOG"
         if [ -n "$SKILL_COUNT" ] && [ "$SKILL_COUNT" != "null" ] && [ "$SKILL_COUNT" -gt 0 ]; then
             echo "[entrypoint v10] Installing $SKILL_COUNT skills..."
             
@@ -182,8 +184,8 @@ if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
                 fi
             done
         else
-            echo "[entrypoint v10] No additional skills to install"
-            echo "No skills to install (count=0 or null)" >> "$DEBUG_LOG"
+            echo "[entrypoint v10] No additional skills to install (SKILL_COUNT='$SKILL_COUNT')"
+            echo "No skills to install - SKILL_COUNT='$SKILL_COUNT'" >> "$DEBUG_LOG"
         fi
     fi
 else
