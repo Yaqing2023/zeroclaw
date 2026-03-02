@@ -158,7 +158,7 @@ if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
     
     if [ -n "$SKILLS_RESPONSE" ]; then
         # Parse skills array and install each one
-        SKILL_COUNT=$(echo "$SKILLS_RESPONSE" | jq -r '.skills | length' 2>/dev/null) || true
+        SKILL_COUNT=$(printf '%s' "$SKILLS_RESPONSE" | jq -r '.skills | length' 2>/dev/null) || true
         echo "[entrypoint v10] DEBUG: SKILL_COUNT='$SKILL_COUNT'"
         echo "SKILL_COUNT='$SKILL_COUNT'" >> "$DEBUG_LOG"
         if [ -n "$SKILL_COUNT" ] && [ "$SKILL_COUNT" != "null" ] && [ "$SKILL_COUNT" -gt 0 ]; then
@@ -168,8 +168,8 @@ if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
             
             # Iterate through skills
             for i in $(seq 0 $((SKILL_COUNT - 1))); do
-                SKILL_NAME=$(echo "$SKILLS_RESPONSE" | jq -r ".skills[$i].name" 2>/dev/null) || true
-                SKILL_CONTENT=$(echo "$SKILLS_RESPONSE" | jq -r ".skills[$i].content" 2>/dev/null) || true
+                SKILL_NAME=$(printf '%s' "$SKILLS_RESPONSE" | jq -r ".skills[$i].name" 2>/dev/null) || true
+                SKILL_CONTENT=$(printf '%s' "$SKILLS_RESPONSE" | jq -r ".skills[$i].content" 2>/dev/null) || true
                 
                 if [ -n "$SKILL_NAME" ] && [ "$SKILL_NAME" != "null" ] && [ -n "$SKILL_CONTENT" ] && [ "$SKILL_CONTENT" != "null" ]; then
                     # Sanitize skill name: remove special chars, spaces, emoji
