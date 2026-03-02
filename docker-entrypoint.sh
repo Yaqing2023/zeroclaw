@@ -139,6 +139,39 @@ echo "[entrypoint v10] Config generated:"
 echo "----------------------------------------"
 cat "$CONFIG_FILE"
 echo "----------------------------------------"
+
+# ── Fetch installed skills from MoltsPay backend ──────────────
+if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
+    echo "[entrypoint v10] Fetching installed skills from backend..."
+    SKILLS_RESPONSE=$(curl -s "$MOLTSPAY_API_URL/api/v1/agents/internal/skills" \
+        -H "Authorization: Bearer $AGENT_TOKEN" 2>/dev/null) || true
+    
+    if [ -n "$SKILLS_RESPONSE" ]; then
+        # Parse skills array and install each one
+        SKILL_COUNT=$(echo "$SKILLS_RESPONSE" | jq -r '.skills | length' 2>/dev/null) || true
+        if [ -n "$SKILL_COUNT" ] && [ "$SKILL_COUNT" != "null" ] && [ "$SKILL_COUNT" -gt 0 ]; then
+            echo "[entrypoint v10] Installing $SKILL_COUNT skills..."
+            
+            mkdir -p "$WORKSPACE_DIR/skills"
+            
+            # Iterate through skills
+            for i in $(seq 0 $((SKILL_COUNT - 1))); do
+                SKILL_NAME=$(echo "$SKILLS_RESPONSE" | jq -r ".skills[$i].name" 2>/dev/null) || true
+                SKILL_CONTENT=$(echo "$SKILLS_RESPONSE" | jq -r ".skills[$i].content" 2>/dev/null) || true
+                
+                if [ -n "$SKILL_NAME" ] && [ "$SKILL_NAME" != "null" ] && [ -n "$SKILL_CONTENT" ] && [ "$SKILL_CONTENT" != "null" ]; then
+                    SKILL_DIR="$WORKSPACE_DIR/skills/$SKILL_NAME"
+                    mkdir -p "$SKILL_DIR"
+                    echo "$SKILL_CONTENT" > "$SKILL_DIR/SKILL.md"
+                    echo "[entrypoint v10]   ✓ Installed skill: $SKILL_NAME"
+                fi
+            done
+        else
+            echo "[entrypoint v10] No additional skills to install"
+        fi
+    fi
+fi
+
 echo "[entrypoint v10] Starting ZeroClaw..."
 
 exec "$@"
