@@ -154,7 +154,7 @@ if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
         -H "Authorization: Bearer $AGENT_TOKEN" 2>/dev/null) || true
     echo "[entrypoint v10] DEBUG: SKILLS_RESPONSE length=${#SKILLS_RESPONSE}"
     echo "SKILLS_RESPONSE length=${#SKILLS_RESPONSE}" >> "$DEBUG_LOG"
-    echo "SKILLS_RESPONSE first 500 chars: ${SKILLS_RESPONSE:0:500}" >> "$DEBUG_LOG"
+    echo "SKILLS_RESPONSE first 500 chars: $(printf '%.500s' "$SKILLS_RESPONSE")" >> "$DEBUG_LOG"
     
     if [ -n "$SKILLS_RESPONSE" ]; then
         # Parse skills array and install each one
