@@ -141,13 +141,20 @@ cat "$CONFIG_FILE"
 echo "----------------------------------------"
 
 # ── Fetch installed skills from MoltsPay backend ──────────────
+DEBUG_LOG="$WORKSPACE_DIR/entrypoint-debug.log"
+echo "=== Entrypoint Debug $(date -Iseconds) ===" > "$DEBUG_LOG"
+echo "MOLTSPAY_API_URL=${MOLTSPAY_API_URL:-<not set>}" >> "$DEBUG_LOG"
+echo "AGENT_TOKEN=${AGENT_TOKEN:+set (${#AGENT_TOKEN} chars)}" >> "$DEBUG_LOG"
 echo "[entrypoint v10] DEBUG: MOLTSPAY_API_URL=${MOLTSPAY_API_URL:-<not set>}"
 echo "[entrypoint v10] DEBUG: AGENT_TOKEN=${AGENT_TOKEN:+set (${#AGENT_TOKEN} chars)}"
 if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
     echo "[entrypoint v10] Fetching installed skills from backend..."
+    echo "Fetching skills..." >> "$DEBUG_LOG"
     SKILLS_RESPONSE=$(curl -s "$MOLTSPAY_API_URL/api/v1/agents/internal/skills" \
         -H "Authorization: Bearer $AGENT_TOKEN" 2>/dev/null) || true
     echo "[entrypoint v10] DEBUG: SKILLS_RESPONSE length=${#SKILLS_RESPONSE}"
+    echo "SKILLS_RESPONSE length=${#SKILLS_RESPONSE}" >> "$DEBUG_LOG"
+    echo "SKILLS_RESPONSE first 500 chars: ${SKILLS_RESPONSE:0:500}" >> "$DEBUG_LOG"
     
     if [ -n "$SKILLS_RESPONSE" ]; then
         # Parse skills array and install each one
@@ -176,8 +183,12 @@ if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
             done
         else
             echo "[entrypoint v10] No additional skills to install"
+            echo "No skills to install (count=0 or null)" >> "$DEBUG_LOG"
         fi
     fi
+else
+    echo "[entrypoint v10] Skipping skills: MOLTSPAY_API_URL or AGENT_TOKEN not set"
+    echo "Skipped: MOLTSPAY_API_URL or AGENT_TOKEN not set" >> "$DEBUG_LOG"
 fi
 
 echo "[entrypoint v10] Starting ZeroClaw..."
