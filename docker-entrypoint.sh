@@ -141,10 +141,13 @@ cat "$CONFIG_FILE"
 echo "----------------------------------------"
 
 # ── Fetch installed skills from MoltsPay backend ──────────────
+echo "[entrypoint v10] DEBUG: MOLTSPAY_API_URL=${MOLTSPAY_API_URL:-<not set>}"
+echo "[entrypoint v10] DEBUG: AGENT_TOKEN=${AGENT_TOKEN:+set (${#AGENT_TOKEN} chars)}"
 if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
     echo "[entrypoint v10] Fetching installed skills from backend..."
     SKILLS_RESPONSE=$(curl -s "$MOLTSPAY_API_URL/api/v1/agents/internal/skills" \
         -H "Authorization: Bearer $AGENT_TOKEN" 2>/dev/null) || true
+    echo "[entrypoint v10] DEBUG: SKILLS_RESPONSE length=${#SKILLS_RESPONSE}"
     
     if [ -n "$SKILLS_RESPONSE" ]; then
         # Parse skills array and install each one
