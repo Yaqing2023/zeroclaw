@@ -160,10 +160,15 @@ if [ -n "$MOLTSPAY_API_URL" ] && [ -n "$AGENT_TOKEN" ]; then
                 SKILL_CONTENT=$(echo "$SKILLS_RESPONSE" | jq -r ".skills[$i].content" 2>/dev/null) || true
                 
                 if [ -n "$SKILL_NAME" ] && [ "$SKILL_NAME" != "null" ] && [ -n "$SKILL_CONTENT" ] && [ "$SKILL_CONTENT" != "null" ]; then
-                    SKILL_DIR="$WORKSPACE_DIR/skills/$SKILL_NAME"
+                    # Sanitize skill name: remove special chars, spaces, emoji
+                    SAFE_NAME=$(echo "$SKILL_NAME" | sed 's/[^a-zA-Z0-9_-]//g' | cut -c1-50)
+                    if [ -z "$SAFE_NAME" ]; then
+                        SAFE_NAME="skill_$i"
+                    fi
+                    SKILL_DIR="$WORKSPACE_DIR/skills/$SAFE_NAME"
                     mkdir -p "$SKILL_DIR"
                     echo "$SKILL_CONTENT" > "$SKILL_DIR/SKILL.md"
-                    echo "[entrypoint v10]   ✓ Installed skill: $SKILL_NAME"
+                    echo "[entrypoint v10]   ✓ Installed skill: $SKILL_NAME -> $SAFE_NAME"
                 fi
             done
         else
