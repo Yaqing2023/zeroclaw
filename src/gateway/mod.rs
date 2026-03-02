@@ -662,6 +662,10 @@ pub async fn run_gateway(host: &str, port: u16, config: Config) -> Result<()> {
         .route("/api/cli-tools", get(api::handle_api_cli_tools))
         .route("/api/health", get(api::handle_api_health))
         .route("/api/chat", post(api::handle_api_chat))
+        // Skills management
+        .route("/skills/install", post(api::handle_skills_install))
+        .route("/skills/uninstall", post(api::handle_skills_uninstall))
+        .route("/skills", get(api::handle_skills_list))
         // ── SSE event stream ──
         .route("/api/events", get(sse::handle_sse_events))
         // ── WebSocket agent chat ──

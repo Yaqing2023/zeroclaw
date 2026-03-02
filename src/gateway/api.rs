@@ -574,3 +574,163 @@ pub async fn handle_api_chat(
 
     Json(response).into_response()
 }
+
+// ── Skills Management ─────────────────────────────────────────────
+
+#[derive(Deserialize)]
+pub struct SkillInstallBody {
+    pub name: String,
+    pub content: String,
+    #[serde(rename = "skillType")]
+    pub skill_type: Option<String>,
+    pub config: Option<serde_json::Value>,
+}
+
+#[derive(Deserialize)]
+pub struct SkillUninstallBody {
+    pub name: String,
+}
+
+/// POST /skills/install — Install a skill to the agent workspace
+pub async fn handle_skills_install(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<SkillInstallBody>,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+
+    let config = state.config.lock().clone();
+    let workspace_dir = &config.workspace_dir;
+    
+    // Sanitize skill name for filesystem
+    let safe_name: String = body.name
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-')
+        .take(50)
+        .collect();
+    
+    if safe_name.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "Invalid skill name"})),
+        ).into_response();
+    }
+    
+    let skill_dir = std::path::Path::new(workspace_dir).join("skills").join(&safe_name);
+    let skill_path = skill_dir.join("SKILL.md");
+    
+    // Create directory and write file
+    if let Err(e) = std::fs::create_dir_all(&skill_dir) {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": format!("Failed to create skill directory: {e}")})),
+        ).into_response();
+    }
+    
+    if let Err(e) = std::fs::write(&skill_path, &body.content) {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": format!("Failed to write skill file: {e}")})),
+        ).into_response();
+    }
+    
+    // Write config if provided
+    if let Some(cfg) = &body.config {
+        let config_path = skill_dir.join("config.json");
+        if let Err(e) = std::fs::write(&config_path, serde_json::to_string_pretty(cfg).unwrap_or_default()) {
+            tracing::warn!("Failed to write skill config: {e}");
+        }
+    }
+    
+    tracing::info!(skill = safe_name, bytes = body.content.len(), "Skill installed");
+    
+    Json(serde_json::json!({
+        "success": true,
+        "skill": {
+            "name": safe_name,
+            "path": skill_path.display().to_string()
+        }
+    })).into_response()
+}
+
+/// POST /skills/uninstall — Remove a skill from the agent workspace
+pub async fn handle_skills_uninstall(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<SkillUninstallBody>,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+
+    let config = state.config.lock().clone();
+    let workspace_dir = &config.workspace_dir;
+    
+    // Sanitize skill name
+    let safe_name: String = body.name
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-')
+        .take(50)
+        .collect();
+    
+    let skill_dir = std::path::Path::new(workspace_dir).join("skills").join(&safe_name);
+    
+    if !skill_dir.exists() {
+        return (
+            StatusCode::NOT_FOUND,
+            Json(serde_json::json!({"error": "Skill not found"})),
+        ).into_response();
+    }
+    
+    if let Err(e) = std::fs::remove_dir_all(&skill_dir) {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(serde_json::json!({"error": format!("Failed to remove skill: {e}")})),
+        ).into_response();
+    }
+    
+    tracing::info!(skill = safe_name, "Skill uninstalled");
+    
+    Json(serde_json::json!({"success": true})).into_response()
+}
+
+/// GET /skills — List installed skills
+pub async fn handle_skills_list(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+
+    let config = state.config.lock().clone();
+    let workspace_dir = &config.workspace_dir;
+    let skills_dir = std::path::Path::new(workspace_dir).join("skills");
+    
+    let mut skills = Vec::new();
+    
+    if skills_dir.exists() {
+        if let Ok(entries) = std::fs::read_dir(&skills_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.is_dir() {
+                    let skill_md = path.join("SKILL.md");
+                    if skill_md.exists() {
+                        if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                            let metadata = std::fs::metadata(&skill_md).ok();
+                            skills.push(serde_json::json!({
+                                "name": name,
+                                "installedAt": metadata.and_then(|m| m.modified().ok())
+                                    .map(|t| chrono::DateTime::<chrono::Utc>::from(t).to_rfc3339())
+                            }));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Json(serde_json::json!({"skills": skills})).into_response()
+}
