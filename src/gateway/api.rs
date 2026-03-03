@@ -734,3 +734,114 @@ pub async fn handle_skills_list(
     
     Json(serde_json::json!({"skills": skills})).into_response()
 }
+
+/// POST /skills/reload — Reload skills from MoltsPay backend
+pub async fn handle_skills_reload(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+
+    let moltspay_url = std::env::var("MOLTSPAY_API_URL")
+        .unwrap_or_else(|_| "https://moltspay.com".to_string());
+    let agent_token = match std::env::var("AGENT_TOKEN") {
+        Ok(t) if !t.is_empty() => t,
+        _ => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(serde_json::json!({"error": "AGENT_TOKEN not configured"})),
+            ).into_response();
+        }
+    };
+
+    // Fetch skills from backend
+    let client = reqwest::Client::new();
+    let skills_url = format!("{}/api/v1/agents/internal/skills", moltspay_url);
+    
+    let response = match client
+        .get(&skills_url)
+        .header("Authorization", format!("Bearer {}", agent_token))
+        .send()
+        .await
+    {
+        Ok(r) => r,
+        Err(e) => {
+            return (
+                StatusCode::BAD_GATEWAY,
+                Json(serde_json::json!({"error": format!("Failed to fetch skills: {}", e)})),
+            ).into_response();
+        }
+    };
+
+    if !response.status().is_success() {
+        return (
+            StatusCode::BAD_GATEWAY,
+            Json(serde_json::json!({"error": format!("Backend returned {}", response.status())})),
+        ).into_response();
+    }
+
+    let body: serde_json::Value = match response.json().await {
+        Ok(b) => b,
+        Err(e) => {
+            return (
+                StatusCode::BAD_GATEWAY,
+                Json(serde_json::json!({"error": format!("Invalid response: {}", e)})),
+            ).into_response();
+        }
+    };
+
+    let skills = match body.get("skills").and_then(|s| s.as_array()) {
+        Some(s) => s,
+        None => {
+            return Json(serde_json::json!({"ok": true, "installed": 0, "message": "No skills found"})).into_response();
+        }
+    };
+
+    let config = state.config.lock().clone();
+    let workspace_dir = &config.workspace_dir;
+    let skills_dir = std::path::Path::new(workspace_dir).join("skills");
+    
+    let mut installed = 0;
+    for skill in skills {
+        let name = skill.get("name").and_then(|n| n.as_str()).unwrap_or("");
+        let content = skill.get("content").and_then(|c| c.as_str()).unwrap_or("");
+        
+        if name.is_empty() || content.is_empty() {
+            continue;
+        }
+        
+        // Sanitize name
+        let safe_name: String = name
+            .chars()
+            .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-')
+            .take(50)
+            .collect();
+        
+        if safe_name.is_empty() {
+            continue;
+        }
+        
+        let skill_dir = skills_dir.join(&safe_name);
+        if let Err(e) = std::fs::create_dir_all(&skill_dir) {
+            tracing::warn!("Failed to create skill dir {}: {}", safe_name, e);
+            continue;
+        }
+        
+        let skill_path = skill_dir.join("SKILL.md");
+        if let Err(e) = std::fs::write(&skill_path, content) {
+            tracing::warn!("Failed to write skill {}: {}", safe_name, e);
+            continue;
+        }
+        
+        tracing::info!("Reloaded skill: {} -> {}", name, safe_name);
+        installed += 1;
+    }
+
+    Json(serde_json::json!({
+        "ok": true,
+        "installed": installed,
+        "message": format!("Reloaded {} skills", installed)
+    })).into_response()
+}
